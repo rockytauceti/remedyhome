@@ -1,0 +1,177 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ─── Auth ───────────────────────────────────────────────────────────────────
+// We use Clerk for auth; clerkId is the external user identifier
+
+model User {
+  id        String   @id @default(cuid())
+  clerkId   String   @unique
+  email     String   @unique
+  name      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  plan              Plan             @default(FREE)
+  profiles          Profile[]
+  sourcePreferences SourcePreference[]
+  journalEntries    JournalEntry[]
+}
+
+enum Plan {
+  FREE
+  FAMILY
+  PRACTITIONER
+}
+
+// ─── Family Profiles ─────────────────────────────────────────────────────────
+
+model Profile {
+  id          String    @id @default(cuid())
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  name        String
+  dateOfBirth DateTime?
+  gender      String?
+  notes       String?   // constitutional notes, sensitivities, etc.
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  journalEntries    JournalEntry[]
+  profileRemedyNotes ProfileRemedyNote[]
+}
+
+// ─── Remedy Knowledge Base ────────────────────────────────────────────────────
+
+model Source {
+  id          String   @id @default(cuid())
+  slug        String   @unique  // e.g. "kent", "boericke", "clarke", "murphy"
+  name        String            // e.g. "Kent's Repertory"
+  author      String?
+  year        Int?
+  description String?
+  isPublicDomain Boolean @default(true)
+
+  rubricRemedies  RubricRemedy[]
+  userPreferences SourcePreference[]
+}
+
+model Remedy {
+  id           String   @id @default(cuid())
+  abbreviation String   @unique  // e.g. "Ars", "Bell", "Puls"
+  name         String            // e.g. "Arsenicum Album"
+  commonName   String?           // e.g. "White Arsenic"
+  kingdom      Kingdom?          // plant, mineral, animal
+  description  String?           // keynote summary
+
+  rubricRemedies     RubricRemedy[]
+  journalEntries     JournalEntry[]
+  profileRemedyNotes ProfileRemedyNote[]
+}
+
+enum Kingdom {
+  PLANT
+  MINERAL
+  ANIMAL
+  NOSODE
+  OTHER
+}
+
+model Rubric {
+  id       String   @id @default(cuid())
+  // Hierarchical path, e.g. "MIND > Anxiety > night"
+  path     String   @unique
+  category String            // top-level chapter: MIND, HEAD, FEVER, etc.
+  label    String            // human-readable symptom description
+  parentId String?
+  parent   Rubric?  @relation("RubricHierarchy", fields: [parentId], references: [id])
+  children Rubric[] @relation("RubricHierarchy")
+
+  remedies RubricRemedy[]
+}
+
+// Junction: which remedies appear under which rubric in which source, with grade
+model RubricRemedy {
+  id       String @id @default(cuid())
+  rubricId String
+  remedyId String
+  sourceId String
+  grade    Int    // 1=minor, 2=notable, 3=keynote
+
+  rubric Rubric @relation(fields: [rubricId], references: [id])
+  remedy Remedy @relation(fields: [remedyId], references: [id])
+  source Source @relation(fields: [sourceId], references: [id])
+
+  @@unique([rubricId, remedyId, sourceId])
+  @@index([rubricId])
+  @@index([remedyId])
+}
+
+// ─── User Source Preferences ──────────────────────────────────────────────────
+
+model SourcePreference {
+  id       String  @id @default(cuid())
+  userId   String
+  sourceId String
+  weight   Int     @default(1) // relative weight when blending sources (1-5)
+  enabled  Boolean @default(true)
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  source Source @relation(fields: [sourceId], references: [id])
+
+  @@unique([userId, sourceId])
+}
+
+// ─── Remedy Journal ───────────────────────────────────────────────────────────
+
+model JournalEntry {
+  id        String   @id @default(cuid())
+  userId    String
+  profileId String
+  remedyId  String
+  date      DateTime @default(now())
+
+  symptoms  String   // free-text description of symptoms at time of use
+  potency   String?  // e.g. "30C", "200C", "LM1"
+  dosage    String?  // e.g. "3 pellets twice daily"
+  duration  String?  // e.g. "3 days"
+  outcome   Outcome  @default(UNKNOWN)
+  notes     String?  // any other observations
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  profile Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  remedy  Remedy  @relation(fields: [remedyId], references: [id])
+}
+
+enum Outcome {
+  UNKNOWN
+  WORKED        // clear improvement
+  PARTIAL       // some improvement
+  NO_EFFECT     // no change
+  AGGRAVATION   // temporary worsening before improvement (common in homeopathy)
+  WRONG_REMEDY  // no fit, discontinued
+}
+
+// Per-profile notes about a specific remedy (e.g. "Belladonna always works for Emma's fevers")
+model ProfileRemedyNote {
+  id        String   @id @default(cuid())
+  profileId String
+  remedyId  String
+  note      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  profile Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  remedy  Remedy  @relation(fields: [remedyId], references: [id])
+
+  @@unique([profileId, remedyId])
+}
