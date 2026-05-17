@@ -48,7 +48,7 @@ export default async function ProfilesPage() {
           </div>
         ) : (
           <div className="grid gap-4">
-            {profiles.map((profile) => (
+            {profiles.map((profile: (typeof profiles)[number]) => (
               <div
                 key={profile.id}
                 className="bg-white rounded-xl border border-stone-200 p-5 flex items-center justify-between hover:border-stone-300 transition-colors"
