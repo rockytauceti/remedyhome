@@ -114,7 +114,7 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
           <section>
             <h3 className="text-lg font-semibold mb-4">Pinned remedy notes</h3>
             <div className="space-y-3">
-              {profile.profileRemedyNotes.map((note) => (
+              {profile.profileRemedyNotes.map((note: (typeof profile.profileRemedyNotes)[number]) => (
                 <div key={note.id} className="bg-white rounded-xl border border-stone-200 p-4">
                   <p className="font-medium text-sm">{note.remedy.name}</p>
                   <p className="text-sm text-stone-500 mt-1">{note.note}</p>
