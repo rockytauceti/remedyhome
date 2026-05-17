@@ -3,6 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import { UserButton } from "@clerk/nextjs";
 import { getOrCreateDbUser } from "@/lib/user";
 import { prisma } from "@/lib/prisma";
+import type { JournalEntry, Remedy } from "@prisma/client";
 
 export default async function ProfilePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -88,7 +89,7 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
             </div>
           ) : (
             <div className="space-y-3">
-              {profile.journalEntries.map((entry) => (
+              {profile.journalEntries.map((entry: JournalEntry & { remedy: Remedy }) => (
                 <div key={entry.id} className="bg-white rounded-xl border border-stone-200 p-4">
                   <div className="flex items-start justify-between">
                     <div>
