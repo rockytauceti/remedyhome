@@ -56,13 +56,17 @@ Respond in valid JSON only — no markdown, no explanation outside the JSON. For
   });
 
   const raw = message.content[0].type === "text" ? message.content[0].text : "";
-  // Strip markdown code fences if present
-  const text = raw.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/, "").trim();
+
+  // Extract JSON object from response regardless of surrounding text or code fences
+  const jsonMatch = raw.match(/\{[\s\S]*\}/);
+  if (!jsonMatch) {
+    return NextResponse.json({ error: "No JSON found in AI response", raw }, { status: 500 });
+  }
 
   try {
-    const result = JSON.parse(text);
+    const result = JSON.parse(jsonMatch[0]);
     return NextResponse.json(result);
   } catch {
-    return NextResponse.json({ error: "Failed to parse AI response", raw: text }, { status: 500 });
+    return NextResponse.json({ error: "Failed to parse AI response", raw }, { status: 500 });
   }
 }
