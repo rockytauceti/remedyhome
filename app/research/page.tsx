@@ -34,7 +34,7 @@ export default function ResearchPage() {
         body: JSON.stringify({ symptoms }),
       });
       const data = await res.json();
-      if (data.error) throw new Error(data.error);
+      if (data.error) throw new Error(data.raw ? `${data.error}: ${data.raw.slice(0, 300)}` : data.error);
       setMatches(data.matches ?? []);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong");
