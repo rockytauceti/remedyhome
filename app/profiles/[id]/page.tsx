@@ -3,6 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import { UserButton } from "@clerk/nextjs";
 import { getOrCreateDbUser } from "@/lib/user";
 import { prisma } from "@/lib/prisma";
+import { OutcomeButtons } from "./outcome-buttons";
 
 export default async function ProfilePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -15,7 +16,7 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
       journalEntries: {
         include: { remedy: true },
         orderBy: { date: "desc" },
-        take: 10,
+        take: 50,
       },
       profileRemedyNotes: {
         include: { remedy: true },
@@ -24,6 +25,9 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
   });
 
   if (!profile) notFound();
+
+  const testingEntries = profile.journalEntries.filter((e) => e.outcome === "TESTING");
+  const historyEntries = profile.journalEntries.filter((e) => e.outcome !== "TESTING").slice(0, 10);
 
   const age = profile.dateOfBirth
     ? Math.floor((Date.now() - new Date(profile.dateOfBirth).getTime()) / (1000 * 60 * 60 * 24 * 365.25))
@@ -63,7 +67,7 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
         {/* Quick actions */}
         <div className="flex gap-3 mb-10">
           <Link
-            href={`/research?profileId=${profile.id}`}
+            href={`/research`}
             className="px-4 py-2 bg-green-700 text-white text-sm font-medium rounded-lg hover:bg-green-800"
           >
             Find a remedy
@@ -76,10 +80,36 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
           </Link>
         </div>
 
-        {/* Remedy journal */}
+        {/* Currently Testing */}
+        {testingEntries.length > 0 && (
+          <section className="mb-10">
+            <h3 className="text-lg font-semibold mb-1">Currently testing</h3>
+            <p className="text-stone-400 text-sm mb-4">Remedies being trialed — mark an outcome when ready</p>
+            <div className="space-y-3">
+              {testingEntries.map((entry: (typeof profile.journalEntries)[number]) => (
+                <div key={entry.id} className="bg-amber-50 rounded-xl border border-amber-200 p-4">
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <span className="font-medium">{entry.remedy.name}</span>
+                      {entry.potency && <span className="text-stone-400 text-sm ml-2">{entry.potency}</span>}
+                      <p className="text-sm text-stone-500 mt-1">{entry.symptoms}</p>
+                      <p className="text-xs text-stone-400 mt-1">
+                        Added {new Date(entry.date).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+                      </p>
+                    </div>
+                    <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-amber-100 text-amber-700">Testing</span>
+                  </div>
+                  <OutcomeButtons entryId={entry.id} />
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* Remedy history */}
         <section className="mb-10">
-          <h3 className="text-lg font-semibold mb-4">Recent remedy history</h3>
-          {profile.journalEntries.length === 0 ? (
+          <h3 className="text-lg font-semibold mb-4">Remedy history</h3>
+          {historyEntries.length === 0 ? (
             <div className="text-center py-10 border-2 border-dashed border-stone-200 rounded-xl">
               <p className="text-stone-400 mb-2">No entries yet</p>
               <Link href={`/journal/new?profileId=${profile.id}`} className="text-green-700 text-sm hover:underline">
@@ -88,7 +118,7 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
             </div>
           ) : (
             <div className="space-y-3">
-              {profile.journalEntries.map((entry: (typeof profile.journalEntries)[number]) => (
+              {historyEntries.map((entry: (typeof profile.journalEntries)[number]) => (
                 <div key={entry.id} className="bg-white rounded-xl border border-stone-200 p-4">
                   <div className="flex items-start justify-between">
                     <div>
@@ -136,6 +166,7 @@ function OutcomeBadge({ outcome }: { outcome: string }) {
     AGGRAVATION: "bg-orange-100 text-orange-700",
     WRONG_REMEDY: "bg-red-100 text-red-600",
     UNKNOWN: "bg-stone-100 text-stone-400",
+    TESTING: "bg-amber-100 text-amber-700",
   };
   const labels: Record<string, string> = {
     WORKED: "Worked",
@@ -144,6 +175,7 @@ function OutcomeBadge({ outcome }: { outcome: string }) {
     AGGRAVATION: "Aggravation",
     WRONG_REMEDY: "Wrong remedy",
     UNKNOWN: "Unknown",
+    TESTING: "Testing",
   };
   return (
     <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${styles[outcome] ?? styles.UNKNOWN}`}>

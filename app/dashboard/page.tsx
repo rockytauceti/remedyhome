@@ -46,6 +46,12 @@ export default async function DashboardPage() {
             <p className="text-sm text-stone-500">Review what you&apos;ve tried and what worked</p>
           </Link>
         </div>
+
+        <div className="mt-6">
+          <Link href="/settings" className="text-sm text-stone-400 hover:text-stone-600">
+            Research source settings
+          </Link>
+        </div>
       </main>
     </div>
   );

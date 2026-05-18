@@ -153,6 +153,7 @@ model JournalEntry {
 }
 
 enum Outcome {
+  TESTING       // currently being trialed, outcome not yet recorded
   UNKNOWN
   WORKED        // clear improvement
   PARTIAL       // some improvement

@@ -132,6 +132,7 @@ export default async function NewJournalEntryPage({
               defaultValue="UNKNOWN"
               className="w-full border border-stone-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 bg-white"
             >
+              <option value="TESTING">Currently testing — outcome TBD</option>
               <option value="UNKNOWN">Unknown / still observing</option>
               <option value="WORKED">Worked — clear improvement</option>
               <option value="PARTIAL">Partial — some improvement</option>
