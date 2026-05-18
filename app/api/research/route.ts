@@ -55,7 +55,9 @@ Respond in valid JSON only — no markdown, no explanation outside the JSON. For
     ],
   });
 
-  const text = message.content[0].type === "text" ? message.content[0].text : "";
+  const raw = message.content[0].type === "text" ? message.content[0].text : "";
+  // Strip markdown code fences if present
+  const text = raw.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/, "").trim();
 
   try {
     const result = JSON.parse(text);
