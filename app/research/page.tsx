@@ -55,6 +55,7 @@ export default function ResearchPage() {
   const [sourcesOpen, setSourcesOpen] = useState(false);
   const [togglingSource, setTogglingSource] = useState<string | null>(null);
   const [refining, setRefining] = useState(false);
+  const [progressMessage, setProgressMessage] = useState("");
 
   const runSearch = useCallback(async (
     symptomText: string,
@@ -63,28 +64,49 @@ export default function ResearchPage() {
   ) => {
     setRefining(true);
     setError("");
+    setProgressMessage("");
 
     try {
-      const promises: Promise<Response>[] = [
-        fetch("/api/repertorize", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ symptoms: symptomText, excludedSymptoms }),
-        }),
-      ];
-      if (!profilesAlreadyLoaded) {
-        promises.push(fetch("/api/profiles"));
+      // Fetch profiles in parallel while streaming repertorize
+      const profilesPromise = profilesAlreadyLoaded
+        ? Promise.resolve(null)
+        : fetch("/api/profiles");
+
+      const response = await fetch("/api/repertorize", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ symptoms: symptomText, excludedSymptoms }),
+      });
+
+      if (!response.body) throw new Error("No response body");
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = "";
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        const parts = buffer.split("\n\n");
+        buffer = parts.pop() ?? "";
+        for (const part of parts) {
+          if (!part.startsWith("data: ")) continue;
+          const event = JSON.parse(part.slice(6));
+          if (event.type === "progress") {
+            setProgressMessage(event.message);
+          } else if (event.type === "result") {
+            setMatches(event.matches ?? []);
+            setActiveSources(event.activeSources ?? []);
+            setAddedEntries(new Set());
+            setExpandedEvidence(new Set());
+          } else if (event.type === "error") {
+            throw new Error(event.error);
+          }
+        }
       }
 
-      const [researchRes, profilesRes] = await Promise.all(promises);
-
-      const data = await researchRes.json();
-      if (data.error) throw new Error(data.error);
-      setMatches(data.matches ?? []);
-      setActiveSources(data.activeSources ?? []);
-      setAddedEntries(new Set());
-      setExpandedEvidence(new Set());
-
+      const profilesRes = await profilesPromise;
       if (profilesRes && profilesRes.ok) {
         const profileData = await profilesRes.json();
         setProfiles(profileData.profiles ?? []);
@@ -97,6 +119,7 @@ export default function ResearchPage() {
     } finally {
       setRefining(false);
       setLoading(false);
+      setProgressMessage("");
     }
   }, []);
 
@@ -248,8 +271,7 @@ export default function ResearchPage() {
         {loading && (
           <div className="text-center py-16 text-stone-400">
             <div className="text-4xl mb-3">🌿</div>
-            <p className="font-medium">Searching Kent&apos;s Repertory…</p>
-            <p className="text-xs mt-1">Looking up rubrics · scoring remedies · consulting Boericke</p>
+            <p className="font-medium">{progressMessage || "Searching Kent\u2019s Repertory\u2026"}</p>
           </div>
         )}
 

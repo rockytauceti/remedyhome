@@ -99,7 +99,7 @@ async function extractRubricQueries(
           properties: {
             rubrics: {
               type: "array",
-              maxItems: 8,
+              maxItems: 5,
               items: {
                 type: "object",
                 properties: {
@@ -362,9 +362,11 @@ export async function repertorize(
     activeSources: Array<{ id: string; slug: string; name: string }>;
     excludedSymptoms?: string[];
     maxRemedies?: number;
+    onProgress?: (message: string) => void;
   }
 ): Promise<RemedyMatch[]> {
-  const { prisma, client, activeSources, maxRemedies = 8 } = options;
+  const { prisma, client, activeSources, maxRemedies = 8, onProgress } = options;
+  const progress = (msg: string) => onProgress?.(msg);
 
   const kentSource =
     activeSources.find((s) => s.slug === "kent") ??
@@ -374,18 +376,21 @@ export async function repertorize(
   const sourceNames = activeSources.map((s) => s.name);
 
   // Step 1
+  progress("Analyzing your symptoms...");
   const queries = await extractRubricQueries(symptoms, client);
   console.log(`[repertorize] ${queries.length} queries`);
   queries.forEach((q) => console.log(`  [${q.chapter}] ${q.keywords.join(" > ")} — ${q.symptomDescription}`));
   if (queries.length === 0) return [];
 
   // Step 2
+  progress(`Found ${queries.length} rubric ${queries.length === 1 ? "query" : "queries"} — searching Kent's Repertory...`);
   const allMatches = await searchRubrics(queries, kentSource.id, prisma);
   const uniqueRemedies = new Set(allMatches.map((m) => m.remedyId)).size;
   console.log(`[repertorize] ${uniqueRemedies} remedies found across ${allMatches.length} query-matches`);
   if (uniqueRemedies === 0) return [];
 
   // Step 3 — score
+  progress(`${uniqueRemedies} remedies matched — scoring and consulting Boericke...`);
   const remedyIds = [...new Set(allMatches.map((m) => m.remedyId))];
   const boerickeSource = await prisma.source.findUnique({ where: { slug: "boericke" } });
   const boerickeRows = boerickeSource
@@ -404,5 +409,6 @@ export async function repertorize(
   );
 
   // Step 4 — explain
+  progress("Generating explanations...");
   return explainMatches(symptoms, top, sourceNames, client);
 }

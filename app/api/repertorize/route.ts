@@ -1,16 +1,16 @@
 /**
  * POST /api/repertorize
  *
- * Phase 6: Repertorization engine endpoint.
- * Uses Kent rubric DB + Boericke keynotes to ground remedy recommendations.
+ * Streams SSE progress events while running the repertorization pipeline,
+ * then emits a final "result" event with matches + activeSources.
  *
- * Request:  { symptoms: string, excludedSymptoms?: string[] }
- * Response: { matches: RemedyMatch[], activeSources: Source[], rubricQueries?: RubricQuery[] }
- *
- * Same response shape as /api/research so the Phase 7 UI swap is a one-liner.
+ * Event types:
+ *   { type: "progress", message: string }
+ *   { type: "result",   matches: RemedyMatch[], activeSources: Source[] }
+ *   { type: "error",    error: string }
  */
 
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
 import { auth } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prisma";
@@ -22,15 +22,21 @@ const DEFAULT_SOURCE_SLUGS = ["kent", "boericke", "boericke-new", "clarke"];
 
 export async function POST(req: NextRequest) {
   const { userId } = await auth();
-  if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!userId) {
+    return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401 });
+  }
 
   const { symptoms, excludedSymptoms = [] } = await req.json();
-  if (!symptoms?.trim()) return NextResponse.json({ error: "Symptoms required" }, { status: 400 });
+  if (!symptoms?.trim()) {
+    return new Response(JSON.stringify({ error: "Symptoms required" }), { status: 400 });
+  }
 
   const user = await getOrCreateDbUser();
-  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!user) {
+    return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401 });
+  }
 
-  // Resolve active sources from user preferences (same logic as /api/research)
+  // Resolve active sources from user preferences
   const prefs = await prisma.sourcePreference.findMany({
     where: { userId: user.id, enabled: true },
     include: { source: true },
@@ -52,26 +58,37 @@ export async function POST(req: NextRequest) {
     if (kent) activeSources = [kent, ...activeSources];
   }
 
-  try {
-    const matches = await repertorize(symptoms, {
-      prisma,
-      client,
-      activeSources,
-      excludedSymptoms,
-    });
+  const activeSourceInfo = activeSources.map((s) => ({ id: s.id, slug: s.slug, name: s.name }));
+  const encoder = new TextEncoder();
 
-    const activeSourceInfo = activeSources.map((s) => ({
-      id: s.id,
-      slug: s.slug,
-      name: s.name,
-    }));
+  const stream = new ReadableStream({
+    async start(controller) {
+      const send = (data: object) =>
+        controller.enqueue(encoder.encode(`data: ${JSON.stringify(data)}\n\n`));
 
-    return NextResponse.json({ matches, activeSources: activeSourceInfo });
-  } catch (err) {
-    console.error("[/api/repertorize]", err);
-    return NextResponse.json(
-      { error: err instanceof Error ? err.message : "Repertorization failed" },
-      { status: 500 }
-    );
-  }
+      try {
+        const matches = await repertorize(symptoms, {
+          prisma,
+          client,
+          activeSources,
+          excludedSymptoms,
+          onProgress: (message) => send({ type: "progress", message }),
+        });
+        send({ type: "result", matches, activeSources: activeSourceInfo });
+      } catch (err) {
+        console.error("[/api/repertorize]", err);
+        send({ type: "error", error: err instanceof Error ? err.message : "Repertorization failed" });
+      } finally {
+        controller.close();
+      }
+    },
+  });
+
+  return new Response(stream, {
+    headers: {
+      "Content-Type": "text/event-stream",
+      "Cache-Control": "no-cache",
+      "Connection": "keep-alive",
+    },
+  });
 }
