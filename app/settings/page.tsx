@@ -6,7 +6,7 @@ import { prisma } from "@/lib/prisma";
 import { saveSourcePreferences } from "@/app/actions/settings";
 
 // Recommended defaults for new users
-const DEFAULT_SOURCE_SLUGS = ["kent", "boericke", "boericke-new", "castro-handbook", "ullman-children", "hershoff-remedies"];
+const DEFAULT_SOURCE_SLUGS = ["kent", "boericke", "boericke-new", "clarke"];
 
 export default async function SettingsPage() {
   const user = await getOrCreateDbUser();
@@ -47,27 +47,41 @@ export default async function SettingsPage() {
         <form action={saveSourcePreferences}>
           <div className="space-y-3 mb-8">
             {sources.map((source) => (
-              <label
-                key={source.id}
-                className="flex items-start gap-4 bg-white rounded-xl border border-stone-200 p-4 cursor-pointer hover:border-green-300 transition-colors"
-              >
-                <input
-                  type="checkbox"
-                  name={`source_${source.id}`}
-                  defaultChecked={isChecked(source)}
-                  className="mt-1 accent-green-700"
-                />
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <span className="font-medium text-stone-900">{source.name}</span>
-                    {source.isPublicDomain && (
-                      <span className="text-xs bg-green-50 text-green-700 px-2 py-0.5 rounded-full border border-green-100">Public domain</span>
-                    )}
+              source.isPublicDomain ? (
+                <label
+                  key={source.id}
+                  className="flex items-start gap-4 bg-white rounded-xl border border-stone-200 p-4 cursor-pointer hover:border-green-300 transition-colors"
+                >
+                  <input
+                    type="checkbox"
+                    name={`source_${source.id}`}
+                    defaultChecked={isChecked(source)}
+                    className="mt-1 accent-green-700"
+                  />
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="font-medium text-stone-900">{source.name}</span>
+                    </div>
+                    <p className="text-xs text-stone-400 mt-0.5">{source.author}{source.year ? ` · ${source.year}` : ""}</p>
+                    <p className="text-sm text-stone-500 mt-1">{source.description}</p>
                   </div>
-                  <p className="text-xs text-stone-400 mt-0.5">{source.author}{source.year ? ` · ${source.year}` : ""}</p>
-                  <p className="text-sm text-stone-500 mt-1">{source.description}</p>
+                </label>
+              ) : (
+                <div
+                  key={source.id}
+                  className="flex items-start gap-4 bg-stone-50 rounded-xl border border-stone-100 p-4 opacity-50"
+                >
+                  <input type="checkbox" disabled className="mt-1" />
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="font-medium text-stone-500">{source.name}</span>
+                      <span className="text-xs bg-stone-100 text-stone-400 px-2 py-0.5 rounded-full border border-stone-200">Not available</span>
+                    </div>
+                    <p className="text-xs text-stone-400 mt-0.5">{source.author}{source.year ? ` · ${source.year}` : ""}</p>
+                    <p className="text-sm text-stone-400 mt-1">{source.description}</p>
+                  </div>
                 </div>
-              </label>
+              )
             ))}
           </div>
 

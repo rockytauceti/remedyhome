@@ -60,6 +60,7 @@ model Source {
 
   rubricRemedies  RubricRemedy[]
   userPreferences SourcePreference[]
+  materiaMedica   MateriaMedica[]
 }
 
 model Remedy {
@@ -73,6 +74,7 @@ model Remedy {
   rubricRemedies     RubricRemedy[]
   journalEntries     JournalEntry[]
   profileRemedyNotes ProfileRemedyNote[]
+  materiaMedica      MateriaMedica[]
 }
 
 enum Kingdom {
@@ -160,6 +162,23 @@ enum Outcome {
   NO_EFFECT     // no change
   AGGRAVATION   // temporary worsening before improvement (common in homeopathy)
   WRONG_REMEDY  // no fit, discontinued
+}
+
+// ─── Materia Medica Text ─────────────────────────────────────────────────────
+// Full text of a remedy's entry in a given source (Boericke, Clarke, etc.)
+
+model MateriaMedica {
+  id         String  @id @default(cuid())
+  remedyId   String
+  sourceId   String
+  fullText   String  // full cleaned text of the remedy section
+  keynotes   String? // leading paragraph / keynote summary
+
+  remedy Remedy @relation(fields: [remedyId], references: [id])
+  source Source @relation(fields: [sourceId], references: [id])
+
+  @@unique([remedyId, sourceId])
+  @@index([remedyId])
 }
 
 // Per-profile notes about a specific remedy (e.g. "Belladonna always works for Emma's fevers")

@@ -41,3 +41,7 @@ yarn-error.log*
 next-env.d.ts
 
 /app/generated/prisma
+
+# Kent extraction — raw HTML files and generated seed data are large; not committed
+/scripts/kent/raw/
+/prisma/seeds/data/

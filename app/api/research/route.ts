@@ -6,13 +6,13 @@ import { getOrCreateDbUser } from "@/lib/user";
 
 const client = new Anthropic();
 
-const DEFAULT_SOURCE_SLUGS = ["kent", "boericke", "boericke-new", "castro-handbook", "ullman-children", "hershoff-remedies"];
+const DEFAULT_SOURCE_SLUGS = ["kent", "boericke", "boericke-new", "clarke"];
 
 export async function POST(req: NextRequest) {
   const { userId } = await auth();
   if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const { symptoms } = await req.json();
+  const { symptoms, excludedSymptoms = [] } = await req.json();
   if (!symptoms?.trim()) return NextResponse.json({ error: "Symptoms required" }, { status: 400 });
 
   const user = await getOrCreateDbUser();
@@ -34,6 +34,9 @@ export async function POST(req: NextRequest) {
   }
 
   const sourceNames = activeSources.map((s) => s.name);
+  const excludedClause = (excludedSymptoms as string[]).length > 0
+    ? `\n\nIMPORTANT: The user has deselected the following symptom factors — do NOT weight these in your analysis: ${(excludedSymptoms as string[]).join(", ")}`
+    : "";
 
   // Fetch all remedies from DB
   const remedies = await prisma.remedy.findMany({
@@ -46,7 +49,7 @@ export async function POST(req: NextRequest) {
     .join("\n");
 
   const message = await client.messages.create({
-    model: "claude-sonnet-4-6",
+    model: "claude-haiku-4-5-20251001",
     max_tokens: 2048,
     tools: [
       {
@@ -87,7 +90,7 @@ export async function POST(req: NextRequest) {
         role: "user",
         content: `You are an expert classical homeopath. A patient presents with the following symptoms:
 
-"${symptoms}"
+"${symptoms}"${excludedClause}
 
 Based on these symptoms, use the recommend_remedies tool to return the top 3-5 homeopathic remedies from the list below. For each remedy:
 - Explain specifically why it matches the symptoms
@@ -106,5 +109,6 @@ ${remedyList}`,
     return NextResponse.json({ error: "No tool response from AI" }, { status: 500 });
   }
 
-  return NextResponse.json(toolUse.input);
+  const activeSourceInfo = activeSources.map((s) => ({ id: s.id, slug: s.slug, name: s.name }));
+  return NextResponse.json({ ...(toolUse.input as object), activeSources: activeSourceInfo });
 }

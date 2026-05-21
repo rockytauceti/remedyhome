@@ -11,7 +11,13 @@
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
     "db:seed": "ts-node prisma/seed.ts",
-    "db:studio": "prisma studio"
+    "db:studio": "prisma studio",
+    "kent:download": "tsx scripts/kent/download.ts",
+    "kent:parse": "tsx scripts/kent/parse.ts",
+    "kent:import": "tsx scripts/kent/import.ts",
+    "boericke:download": "tsx scripts/boericke/download.ts",
+    "boericke:parse": "tsx scripts/boericke/parse.ts",
+    "boericke:import": "tsx scripts/boericke/import.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.95.1",
@@ -29,9 +35,11 @@
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
+    "@types/cheerio": "^0.22.35",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "cheerio": "^1.2.0",
     "dotenv": "^17.4.2",
     "eslint": "^9",
     "eslint-config-next": "16.2.6",
