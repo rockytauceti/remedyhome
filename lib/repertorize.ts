@@ -408,7 +408,25 @@ export async function repertorize(
     top.map((r) => `${r.abbreviation}(score=${r.totalScore},q=${r.queriesMatched})`).join(", ")
   );
 
-  // Step 4 — explain
-  progress("Generating explanations...");
-  return explainMatches(symptoms, top, sourceNames, client);
+  // Step 4 — explain (longest step; cycle progress messages every 2s)
+  const explanationPhrases = [
+    "Generating explanations...",
+    "Cross-referencing Boericke keynotes...",
+    "Evaluating clinical fit...",
+    "Reviewing modalities and triggers...",
+    "Assessing potency guidance...",
+    "Finalizing recommendations...",
+  ];
+  let phraseIndex = 0;
+  progress(explanationPhrases[phraseIndex]);
+  const progressInterval = setInterval(() => {
+    phraseIndex = Math.min(phraseIndex + 1, explanationPhrases.length - 1);
+    progress(explanationPhrases[phraseIndex]);
+  }, 2000);
+
+  try {
+    return await explainMatches(symptoms, top, sourceNames, client);
+  } finally {
+    clearInterval(progressInterval);
+  }
 }
