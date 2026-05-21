@@ -158,56 +158,55 @@ async function searchRubrics(
   kentSourceId: string,
   prisma: PrismaClient
 ): Promise<QueryMatch[]> {
-  const allMatches: QueryMatch[] = [];
+  // Run all rubric lookups in parallel — same queries, same results, no serial wait
+  const results = await Promise.all(
+    queries.map(async (query, qi) => {
+      try {
+        const keywordConditions = query.keywords
+          .map((_, i) => `r.path ILIKE $${i + 3}`)
+          .join(" AND ");
 
-  for (let qi = 0; qi < queries.length; qi++) {
-    const query = queries[qi];
-    try {
-      const keywordConditions = query.keywords
-        .map((_, i) => `r.path ILIKE $${i + 3}`)
-        .join(" AND ");
+        // DISTINCT ON rem.id + ORDER BY grade DESC → one row per remedy, best grade
+        const sql = `
+          SELECT DISTINCT ON (rem.id)
+                 r.path,
+                 rr.grade,
+                 rem.id AS "remedyId", rem.abbreviation, rem.name
+          FROM "Rubric" r
+          JOIN "RubricRemedy" rr ON rr."rubricId" = r.id
+          JOIN "Remedy" rem       ON rem.id = rr."remedyId"
+          WHERE r.category = $1
+            AND rr."sourceId" = $2
+            ${query.keywords.length > 0 ? `AND ${keywordConditions}` : ""}
+          ORDER BY rem.id, rr.grade DESC
+        `;
 
-      // DISTINCT ON rem.id + ORDER BY grade DESC → one row per remedy, best grade
-      const sql = `
-        SELECT DISTINCT ON (rem.id)
-               r.path,
-               rr.grade,
-               rem.id AS "remedyId", rem.abbreviation, rem.name
-        FROM "Rubric" r
-        JOIN "RubricRemedy" rr ON rr."rubricId" = r.id
-        JOIN "Remedy" rem       ON rem.id = rr."remedyId"
-        WHERE r.category = $1
-          AND rr."sourceId" = $2
-          ${query.keywords.length > 0 ? `AND ${keywordConditions}` : ""}
-        ORDER BY rem.id, rr.grade DESC
-      `;
+        const params: (string | number)[] = [
+          query.chapter,
+          kentSourceId,
+          ...query.keywords.map((k) => `%${k}%`),
+        ];
 
-      const params: (string | number)[] = [
-        query.chapter,
-        kentSourceId,
-        ...query.keywords.map((k) => `%${k}%`),
-      ];
+        const rows = await prisma.$queryRawUnsafe<
+          Array<{ path: string; grade: number; remedyId: string; abbreviation: string; name: string }>
+        >(sql, ...params);
 
-      const rows = await prisma.$queryRawUnsafe<
-        Array<{ path: string; grade: number; remedyId: string; abbreviation: string; name: string }>
-      >(sql, ...params);
-
-      for (const row of rows) {
-        allMatches.push({
+        return rows.map((row) => ({
           queryIndex: qi,
           remedyId: row.remedyId,
           abbreviation: row.abbreviation,
           name: row.name,
           grade: Number(row.grade),
           path: row.path,
-        });
+        }));
+      } catch (err) {
+        console.error(`Rubric search failed [${query.chapter}/${query.keywords}]:`, err);
+        return [] as QueryMatch[];
       }
-    } catch (err) {
-      console.error(`Rubric search failed [${query.chapter}/${query.keywords}]:`, err);
-    }
-  }
+    })
+  );
 
-  return allMatches;
+  return results.flat();
 }
 
 // ─── Step 3: Score + rank remedies ───────────────────────────────────────────
