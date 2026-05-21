@@ -94,6 +94,37 @@ export default function HomePage() {
           ))}
         </div>
       </section>
+
+      {/* Human story section */}
+      <section className="py-16 px-6">
+        <div className="max-w-5xl mx-auto flex flex-col lg:flex-row items-center gap-12">
+          <div className="flex-1 relative rounded-3xl overflow-hidden aspect-[3/2] w-full max-w-lg">
+            <Image
+              src="/mom-child-remedies.jpg"
+              alt="Mother and child exploring homeopathic remedies together"
+              fill
+              className="object-cover"
+            />
+          </div>
+          <div className="flex-1 text-left">
+            <p className="text-sm font-medium tracking-widest text-green-700 uppercase mb-4">Built for families</p>
+            <h2 className="text-3xl leading-snug text-green-800 mb-5">
+              The knowledge you build<br />stays with your family
+            </h2>
+            <p className="text-stone-600 leading-relaxed mb-5">
+              Every family has its own patterns — the remedy that calmed a fever, the one that didn&apos;t work for teething,
+              the combination that finally helped with sleep. RemedyHome keeps all of it in one place,
+              so the next time symptoms arise, you&apos;re not starting from scratch.
+            </p>
+            <Link
+              href="/sign-up"
+              className="inline-block px-6 py-3 bg-green-700 text-white font-medium rounded-full hover:bg-green-800 transition-colors text-sm"
+            >
+              Start building your family&apos;s record →
+            </Link>
+          </div>
+        </div>
+      </section>
     </div>
   );
 }
