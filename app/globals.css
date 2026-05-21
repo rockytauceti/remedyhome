@@ -43,6 +43,7 @@ body {
   color: #47483B;
   background: #F7F2DB;
   -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
 }
 
 h1, h2, h3, h4, h5, h6 {
