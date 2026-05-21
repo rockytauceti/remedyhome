@@ -268,12 +268,7 @@ export default function ResearchPage() {
           </div>
         )}
 
-        {loading && (
-          <div className="text-center py-16 text-stone-400">
-            <div className="text-4xl mb-3">🌿</div>
-            <p className="font-medium">{progressMessage || "Searching Kent\u2019s Repertory\u2026"}</p>
-          </div>
-        )}
+        {loading && <ArnicaLoader message={progressMessage} />}
 
         {hasResults && (
           <div className={`space-y-5 transition-opacity ${refining ? "opacity-50 pointer-events-none" : ""}`}>
@@ -533,6 +528,56 @@ export default function ResearchPage() {
 }
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
+
+function ArnicaLoader({ message }: { message: string }) {
+  const PETALS = 13;
+  return (
+    <div className="text-center py-12">
+      <style>{`
+        @keyframes arnica-bloom {
+          0%, 100% { transform: scale(1); }
+          50% { transform: scale(1.08); }
+        }
+        @keyframes arnica-petal {
+          0%, 100% { opacity: 0.65; }
+          50% { opacity: 1; }
+        }
+        .arnica-group {
+          animation: arnica-bloom 2.8s ease-in-out infinite;
+          transform-origin: 40px 40px;
+        }
+        .arnica-petal {
+          animation: arnica-petal 2s ease-in-out infinite;
+        }
+      `}</style>
+      <svg width="90" height="90" viewBox="0 0 80 80" className="mx-auto mb-5">
+        <g className="arnica-group">
+          {Array.from({ length: PETALS }).map((_, i) => (
+            <g key={i} transform={`rotate(${(i * 360) / PETALS}, 40, 40)`}>
+              <ellipse
+                className="arnica-petal"
+                cx="40"
+                cy="19"
+                rx="4.5"
+                ry="12"
+                fill="#FBBF24"
+                style={{ animationDelay: `${((i * 2) / PETALS).toFixed(2)}s` }}
+              />
+            </g>
+          ))}
+          <circle cx="40" cy="40" r="12" fill="#D97706" />
+          <circle cx="40" cy="40" r="8"  fill="#FBBF24" />
+          <circle cx="37" cy="38" r="1.5" fill="#D97706" opacity="0.5" />
+          <circle cx="42" cy="37" r="1.5" fill="#D97706" opacity="0.5" />
+          <circle cx="40" cy="42" r="1.5" fill="#D97706" opacity="0.5" />
+        </g>
+      </svg>
+      <p className="text-stone-600 font-medium text-sm">
+        {message || "Searching Kent\u2019s Repertory\u2026"}
+      </p>
+    </div>
+  );
+}
 
 function MatchBadge({ score }: { score: number }) {
   const color =
