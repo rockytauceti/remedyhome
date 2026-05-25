@@ -304,7 +304,11 @@ async function explainMatches(
                     type: "string",
                     description: "2–3 sentences referencing specific rubrics and keynotes.",
                   },
-                  keySymptoms: { type: "array", items: { type: "string" } },
+                  keySymptoms: {
+                    type: "array",
+                    items: { type: "string" },
+                    description: "Short symptom phrases in plain everyday English that a non-medical parent can instantly understand. NO Latin, NO homeopathy jargon, NO medical terminology. Translate: 'suppurative tendencies' → 'skin infections that form pus', 'lachrymation' → 'watery eyes', 'photophobia' → 'sensitive to light', 'loquacity' → 'can't stop talking', 'coryza' → 'runny nose', 'epistaxis' → 'nosebleeds', 'pyrexia' → 'fever'. Keep each phrase under 5 words.",
+                  },
                   suggestedPotency: { type: "string" },
                   notes: { type: "string" },
                   sources: { type: "array", items: { type: "string" } },
@@ -322,11 +326,13 @@ async function explainMatches(
       {
         role: "user",
         content:
-          `You are an expert classical homeopath. Patient symptoms:\n\n"${symptoms}"\n\n` +
+          `You are an expert classical homeopath explaining remedies to a non-medical parent. Patient symptoms:\n\n"${symptoms}"\n\n` +
           `The following remedies were found by Kent repertory database search. ` +
           `Explain each using the rubric evidence and Boericke keynotes. ` +
           `Be specific — reference actual rubric paths. ` +
           `Rank by clinical appropriateness (consider Kent score AND overall fit). ` +
+          `For keySymptoms: use plain everyday English only — no Latin, no jargon, no homeopathy terminology. ` +
+          `A tired parent should immediately understand every symptom phrase without needing to look anything up. ` +
           `Active sources: ${sourceNames.join(", ")}.\n\n` +
           remedySummaries,
       },

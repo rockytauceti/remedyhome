@@ -271,7 +271,15 @@ export default function ResearchPage() {
         {loading && <ArnicaLoader message={progressMessage} />}
 
         {hasResults && (
-          <div className={`space-y-5 transition-opacity ${refining ? "opacity-50 pointer-events-none" : ""}`}>
+          <div className="relative">
+          {refining && (
+            <div className="absolute inset-0 z-10 flex flex-col items-center justify-center">
+              <div className="bg-stone-50/90 backdrop-blur-sm rounded-2xl px-8 py-6 shadow-md">
+                <ArnicaLoader message={progressMessage || "Recalculating…"} />
+              </div>
+            </div>
+          )}
+          <div className={`space-y-5 transition-opacity ${refining ? "opacity-30 pointer-events-none" : ""}`}>
             {/* Profile selector */}
             <div className="bg-green-50 border border-green-200 rounded-xl px-4 py-3">
               {addingProfile ? (
@@ -400,8 +408,6 @@ export default function ResearchPage() {
               </div>
             )}
 
-            {refining && <p className="text-sm text-stone-400 text-center py-2">Recalculating…</p>}
-
             <h3 className="text-lg font-semibold">Top matches</h3>
 
             {matches.map((match, i) => {
@@ -520,6 +526,7 @@ export default function ResearchPage() {
                 </div>
               );
             })}
+          </div>
           </div>
         )}
       </main>
