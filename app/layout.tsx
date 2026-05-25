@@ -18,11 +18,20 @@ const dmSans = DM_Sans({
 export const metadata: Metadata = {
   title: "RemedyHome",
   description: "Family homeopathy remedy tracker and research tool",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "RemedyHome",
+  },
+  icons: {
+    apple: "/icons/apple-touch-icon.png",
+  },
 };
 
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
+  themeColor: "#325E4D",
 };
 
 export default function RootLayout({
