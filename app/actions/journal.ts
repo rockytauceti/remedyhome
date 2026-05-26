@@ -33,7 +33,7 @@ export async function createJournalEntry(formData: FormData) {
       symptoms,
       potency: potency || null,
       dosage: dosage || null,
-      outcome: (outcome as "WORKED" | "PARTIAL" | "NO_EFFECT" | "AGGRAVATION" | "WRONG_REMEDY" | "UNKNOWN") || "UNKNOWN",
+      outcome: (outcome as "TESTING" | "WORKED" | "PARTIAL" | "NO_EFFECT" | "AGGRAVATION" | "WRONG_REMEDY" | "UNKNOWN") || "UNKNOWN",
       notes: notes || null,
       date: dateRaw ? new Date(dateRaw) : new Date(),
     },

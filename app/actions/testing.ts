@@ -47,7 +47,7 @@ export async function updateOutcome(entryId: string, outcome: string) {
 
   await prisma.journalEntry.update({
     where: { id: entryId },
-    data: { outcome: outcome as "WORKED" | "PARTIAL" | "NO_EFFECT" | "AGGRAVATION" | "WRONG_REMEDY" | "UNKNOWN" },
+    data: { outcome: outcome as "TESTING" | "WORKED" | "PARTIAL" | "NO_EFFECT" | "AGGRAVATION" | "WRONG_REMEDY" | "UNKNOWN" },
   });
 
   revalidatePath(`/profiles/${entry.profileId}`);
