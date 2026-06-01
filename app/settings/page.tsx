@@ -1,9 +1,8 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
-import { UserButton } from "@clerk/nextjs";
 import { getOrCreateDbUser } from "@/lib/user";
 import { prisma } from "@/lib/prisma";
 import { saveSourcePreferences } from "@/app/actions/settings";
+import NavHeader from "@/components/NavHeader";
 
 // Recommended defaults for new users
 const DEFAULT_SOURCE_SLUGS = ["kent", "boericke", "boericke-new", "clarke"];
@@ -29,14 +28,7 @@ export default async function SettingsPage() {
 
   return (
     <div className="min-h-screen bg-stone-50">
-      <header className="border-b border-stone-200 bg-white px-6 py-4 flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <Link href="/dashboard" className="text-xl font-semibold text-green-800">RemedyHome</Link>
-          <span className="text-stone-300">/</span>
-          <span className="text-stone-600 font-medium">Settings</span>
-        </div>
-        <UserButton />
-      </header>
+      <NavHeader section="Settings" />
 
       <main className="max-w-2xl mx-auto px-6 py-10">
         <h2 className="text-2xl font-semibold mb-1">Research Sources</h2>

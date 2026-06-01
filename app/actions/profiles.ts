@@ -12,6 +12,7 @@ export async function createProfile(formData: FormData) {
   const dateOfBirthRaw = formData.get("dateOfBirth") as string;
   const gender = formData.get("gender") as string;
   const notes = formData.get("notes") as string;
+  const clientGroupId = formData.get("clientGroupId") as string;
 
   if (!name?.trim()) throw new Error("Name is required");
 
@@ -22,10 +23,11 @@ export async function createProfile(formData: FormData) {
       dateOfBirth: dateOfBirthRaw ? new Date(dateOfBirthRaw) : null,
       gender: gender || null,
       notes: notes || null,
+      clientGroupId: clientGroupId || null,
     },
   });
 
-  redirect("/profiles");
+  redirect(clientGroupId ? `/clients/${clientGroupId}` : "/profiles");
 }
 
 export async function deleteProfile(profileId: string) {

@@ -1,26 +1,26 @@
 import Link from "next/link";
-import { UserButton } from "@clerk/nextjs";
 import { createProfile } from "@/app/actions/profiles";
+import NavHeader from "@/components/NavHeader";
 
-export default function NewProfilePage() {
+export default async function NewProfilePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ clientGroupId?: string }>;
+}) {
+  const { clientGroupId } = await searchParams;
+
   return (
     <div className="min-h-screen bg-stone-50">
-      <header className="border-b border-stone-200 bg-white px-6 py-4 flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <Link href="/dashboard" className="text-xl font-semibold text-green-800">RemedyHome</Link>
-          <span className="text-stone-300">/</span>
-          <Link href="/profiles" className="text-stone-600 font-medium hover:text-stone-900">Family Profiles</Link>
-          <span className="text-stone-300">/</span>
-          <span className="text-stone-600">New</span>
-        </div>
-        <UserButton />
-      </header>
+      <NavHeader section="New Profile" />
 
       <main className="max-w-lg mx-auto px-6 py-10">
         <h2 className="text-2xl font-semibold mb-1">Add a family member</h2>
         <p className="text-stone-500 text-sm mb-8">Create a profile to track remedies and outcomes for this person.</p>
 
         <form action={createProfile} className="space-y-5">
+          {clientGroupId && (
+            <input type="hidden" name="clientGroupId" value={clientGroupId} />
+          )}
           <div>
             <label className="block text-sm font-medium text-stone-700 mb-1">
               Name <span className="text-red-400">*</span>

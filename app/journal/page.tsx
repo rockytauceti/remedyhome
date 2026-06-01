@@ -1,8 +1,8 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { UserButton } from "@clerk/nextjs";
 import { getOrCreateDbUser } from "@/lib/user";
 import { prisma } from "@/lib/prisma";
+import NavHeader from "@/components/NavHeader";
 
 const OUTCOME_STYLES: Record<string, string> = {
   WORKED: "bg-green-100 text-green-700",
@@ -40,14 +40,7 @@ export default async function JournalPage() {
 
   return (
     <div className="min-h-screen bg-stone-50">
-      <header className="border-b border-stone-200 bg-white px-6 py-4 flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <Link href="/dashboard" className="text-xl font-semibold text-green-800">RemedyHome</Link>
-          <span className="text-stone-300">/</span>
-          <span className="text-stone-600 font-medium">Remedy Journal</span>
-        </div>
-        <UserButton />
-      </header>
+      <NavHeader section="Remedy Journal" />
 
       <main className="max-w-3xl mx-auto px-6 py-10">
         <div className="flex items-center justify-between mb-8">

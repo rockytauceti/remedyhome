@@ -19,6 +19,7 @@ model User {
 
   plan              Plan             @default(FREE)
   profiles          Profile[]
+  clientGroups      ClientGroup[]
   sourcePreferences SourcePreference[]
   journalEntries    JournalEntry[]
 }
@@ -36,6 +37,9 @@ model Profile {
   userId      String
   user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  clientGroupId String?
+  clientGroup   ClientGroup? @relation(fields: [clientGroupId], references: [id], onDelete: SetNull)
+
   name        String
   dateOfBirth DateTime?
   gender      String?
@@ -45,6 +49,21 @@ model Profile {
 
   journalEntries    JournalEntry[]
   profileRemedyNotes ProfileRemedyNote[]
+}
+
+// ─── Practitioner Client Groups ───────────────────────────────────────────────
+
+model ClientGroup {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  name      String    // e.g. "Johnson Family", "Maria S."
+  notes     String?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  profiles  Profile[]
 }
 
 // ─── Remedy Knowledge Base ────────────────────────────────────────────────────

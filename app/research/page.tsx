@@ -229,16 +229,7 @@ export default function ResearchPage() {
     [...deselectedSymptoms].some((s) => !committedExclusions.has(s));
 
   return (
-    <div className="min-h-screen bg-stone-50">
-      <header className="border-b border-stone-200 bg-white px-6 py-4 flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <Link href="/dashboard" className="text-xl font-semibold text-green-800">RemedyHome</Link>
-          <span className="text-stone-300">/</span>
-          <span className="text-stone-600 font-medium">Find a Remedy</span>
-        </div>
-        <Link href="/settings" className="text-sm text-stone-400 hover:text-stone-600">Manage sources</Link>
-      </header>
-
+    <>
       <main className="max-w-3xl mx-auto px-6 py-10">
         <h2 className="text-2xl font-semibold mb-1">Find a Remedy</h2>
         <p className="text-stone-500 text-sm mb-8">
@@ -530,7 +521,7 @@ export default function ResearchPage() {
           </div>
         )}
       </main>
-    </div>
+    </>
   );
 }
 

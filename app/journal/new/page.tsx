@@ -1,9 +1,9 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { UserButton } from "@clerk/nextjs";
 import { getOrCreateDbUser } from "@/lib/user";
 import { prisma } from "@/lib/prisma";
 import { createJournalEntry } from "@/app/actions/journal";
+import NavHeader from "@/components/NavHeader";
 
 export default async function NewJournalEntryPage({
   searchParams,
@@ -26,14 +26,7 @@ export default async function NewJournalEntryPage({
 
   return (
     <div className="min-h-screen bg-stone-50">
-      <header className="border-b border-stone-200 bg-white px-6 py-4 flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <Link href="/dashboard" className="text-xl font-semibold text-green-800">RemedyHome</Link>
-          <span className="text-stone-300">/</span>
-          <span className="text-stone-600 font-medium">Log a Remedy</span>
-        </div>
-        <UserButton />
-      </header>
+      <NavHeader section="Log a Remedy" />
 
       <main className="max-w-lg mx-auto px-6 py-10">
         <h2 className="text-2xl font-semibold mb-1">Log a remedy</h2>

@@ -4,7 +4,10 @@ import { auth } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prisma";
 import { getOrCreateDbUser } from "@/lib/user";
 
-const client = new Anthropic();
+const client = new Anthropic({
+  apiKey: process.env.OPENROUTER_API_KEY,
+  baseURL: "https://openrouter.ai/api/v1",
+});
 
 const DEFAULT_SOURCE_SLUGS = ["kent", "boericke", "boericke-new", "clarke"];
 

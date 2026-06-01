@@ -1,9 +1,9 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { UserButton } from "@clerk/nextjs";
 import { getOrCreateDbUser } from "@/lib/user";
 import { prisma } from "@/lib/prisma";
 import { OutcomeButtons } from "./outcome-buttons";
+import NavHeader from "@/components/NavHeader";
 
 export default async function ProfilePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -35,16 +35,7 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
 
   return (
     <div className="min-h-screen bg-stone-50">
-      <header className="border-b border-stone-200 bg-white px-6 py-4 flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <Link href="/dashboard" className="text-xl font-semibold text-green-800">RemedyHome</Link>
-          <span className="text-stone-300">/</span>
-          <Link href="/profiles" className="text-stone-600 font-medium hover:text-stone-900">Family Profiles</Link>
-          <span className="text-stone-300">/</span>
-          <span className="text-stone-600">{profile.name}</span>
-        </div>
-        <UserButton />
-      </header>
+      <NavHeader section={profile.name} />
 
       <main className="max-w-3xl mx-auto px-6 py-10">
         {/* Profile header */}
