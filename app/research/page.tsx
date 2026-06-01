@@ -273,7 +273,7 @@ export default function ResearchPage() {
         {hasResults && (
           <div className="relative">
           {refining && (
-            <div className="absolute inset-0 z-10 flex flex-col items-center justify-center">
+            <div className="fixed inset-0 z-50 flex flex-col items-center justify-center">
               <div className="bg-stone-50/90 backdrop-blur-sm rounded-2xl px-8 py-6 shadow-md">
                 <ArnicaLoader message={progressMessage || "Recalculating…"} />
               </div>
