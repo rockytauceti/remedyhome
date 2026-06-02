@@ -4,6 +4,7 @@ import { getOrCreateDbUser } from "@/lib/user";
 import { prisma } from "@/lib/prisma";
 import { createJournalEntry } from "@/app/actions/journal";
 import NavHeader from "@/components/NavHeader";
+import SubmitButton from "@/components/SubmitButton";
 
 export default async function NewJournalEntryPage({
   searchParams,
@@ -149,12 +150,7 @@ export default async function NewJournalEntryPage({
           </div>
 
           <div className="flex gap-3 pt-2">
-            <button
-              type="submit"
-              className="px-5 py-2 bg-green-700 text-white text-sm font-medium rounded-lg hover:bg-green-800"
-            >
-              Save entry
-            </button>
+            <SubmitButton label="Save entry" loadingLabel="Saving…" />
             <Link
               href={params.profileId ? `/profiles/${params.profileId}` : "/profiles"}
               className="px-5 py-2 text-sm font-medium text-stone-600 hover:text-stone-900 rounded-lg border border-stone-200 hover:border-stone-300"

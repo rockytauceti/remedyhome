@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { createProfile } from "@/app/actions/profiles";
 import NavHeader from "@/components/NavHeader";
+import SubmitButton from "@/components/SubmitButton";
 
 export default async function NewProfilePage({
   searchParams,
@@ -52,7 +53,6 @@ export default async function NewProfilePage({
               <option value="">Prefer not to say</option>
               <option value="Female">Female</option>
               <option value="Male">Male</option>
-              <option value="Other">Other</option>
             </select>
           </div>
 
@@ -70,12 +70,7 @@ export default async function NewProfilePage({
           </div>
 
           <div className="flex gap-3 pt-2">
-            <button
-              type="submit"
-              className="px-5 py-2 bg-green-700 text-white text-sm font-medium rounded-lg hover:bg-green-800"
-            >
-              Create profile
-            </button>
+            <SubmitButton label="Create profile" loadingLabel="Creating…" />
             <Link
               href="/profiles"
               className="px-5 py-2 text-sm font-medium text-stone-600 hover:text-stone-900 rounded-lg border border-stone-200 hover:border-stone-300"
