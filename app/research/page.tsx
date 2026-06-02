@@ -514,6 +514,9 @@ export default function ResearchPage() {
                       Log with full details →
                     </Link>
                   </div>
+
+                  {/* Buy links */}
+                  <BuyLinks remedyName={match.name} />
                 </div>
               );
             })}
@@ -608,5 +611,47 @@ function RubricPill({ path, grade }: { path: string; grade: number }) {
       <span className="font-mono text-[9px] tracking-tighter opacity-60">{gradeDot}</span>
       {label}
     </span>
+  );
+}
+
+function BuyLinks({ remedyName }: { remedyName: string }) {
+  const query = encodeURIComponent(`${remedyName} homeopathic`);
+  const iherbCode = process.env.NEXT_PUBLIC_IHERB_CODE;
+  const amazonTag = process.env.NEXT_PUBLIC_AMAZON_TAG;
+
+  const iherbUrl = iherbCode
+    ? `https://www.iherb.com/search?query=${query}&rcode=${iherbCode}`
+    : `https://www.iherb.com/search?query=${query}`;
+  const amazonUrl = amazonTag
+    ? `https://www.amazon.com/s?k=${query}&tag=${amazonTag}`
+    : `https://www.amazon.com/s?k=${query}`;
+
+  return (
+    <div className="mt-3 pt-2.5 border-t border-stone-100 flex items-center gap-1.5 flex-wrap">
+      <span className="text-xs text-stone-400">Buy:</span>
+      <a
+        href={iherbUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="text-xs text-green-700 hover:text-green-900 hover:underline flex items-center gap-0.5"
+      >
+        iHerb
+        <svg className="w-2.5 h-2.5 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+        </svg>
+      </a>
+      <span className="text-stone-200">·</span>
+      <a
+        href={amazonUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="text-xs text-green-700 hover:text-green-900 hover:underline flex items-center gap-0.5"
+      >
+        Amazon
+        <svg className="w-2.5 h-2.5 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+        </svg>
+      </a>
+    </div>
   );
 }
