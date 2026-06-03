@@ -78,6 +78,10 @@ export default function ResearchPage() {
         body: JSON.stringify({ symptoms: symptomText, excludedSymptoms }),
       });
 
+      if (!response.ok) {
+        const text = await response.text();
+        throw new Error(`Search failed (${response.status}). Please try again.`);
+      }
       if (!response.body) throw new Error("No response body");
 
       const reader = response.body.getReader();
