@@ -94,6 +94,7 @@ model Remedy {
   journalEntries     JournalEntry[]
   profileRemedyNotes ProfileRemedyNote[]
   materiaMedica      MateriaMedica[]
+  communityStat      CommunityRemedyStat?
 }
 
 enum Kingdom {
@@ -181,6 +182,21 @@ enum Outcome {
   NO_EFFECT     // no change
   AGGRAVATION   // temporary worsening before improvement (common in homeopathy)
   WRONG_REMEDY  // no fit, discontinued
+}
+
+// ─── Community Outcome Data ───────────────────────────────────────────────────
+// Aggregated, anonymized outcome stats per remedy — no PII, no symptom text.
+// Recomputed periodically from all journal entries with resolved outcomes.
+
+model CommunityRemedyStat {
+  id            String   @id @default(cuid())
+  remedyId      String   @unique
+  remedy        Remedy   @relation(fields: [remedyId], references: [id])
+
+  totalCases    Int      @default(0)
+  workedCases   Int      @default(0)
+  partialCases  Int      @default(0)
+  lastUpdatedAt DateTime @default(now())
 }
 
 // ─── Materia Medica Text ─────────────────────────────────────────────────────

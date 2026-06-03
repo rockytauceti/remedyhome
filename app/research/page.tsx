@@ -27,6 +27,8 @@ interface RemedyMatch {
   rubricEvidence?: RubricEvidence[];
   kentScore?: number;
   queriesMatched?: number;
+  // Community data
+  communityStats?: { totalCases: number; effectiveRate: number };
 }
 
 interface Profile {
@@ -413,10 +415,15 @@ export default function ResearchPage() {
                   {/* Header */}
                   <div className="flex items-start justify-between mb-3">
                     <div>
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 flex-wrap">
                         <span className="text-xs font-bold text-stone-400">#{i + 1}</span>
                         <h4 className="font-semibold text-lg">{match.name}</h4>
                         <span className="text-stone-400 text-sm">({match.abbreviation})</span>
+                        {match.communityStats && (
+                          <span className="text-xs bg-blue-50 text-blue-700 border border-blue-200 px-2 py-0.5 rounded-full font-medium">
+                            {match.communityStats.effectiveRate}% effective · {match.communityStats.totalCases} real cases
+                          </span>
+                        )}
                       </div>
                       <p className="text-xs text-stone-400 mt-0.5">
                         Suggested potency: <span className="font-medium text-stone-600">{match.suggestedPotency}</span>
