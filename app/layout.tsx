@@ -18,6 +18,9 @@ const dmSans = DM_Sans({
 export const metadata: Metadata = {
   title: "RemedyHome",
   description: "Family homeopathy remedy tracker and research tool",
+  other: {
+    "impact-site-verification": "cd7e4693-9fb2-474d-ac31-0a63f98f44c0",
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
