@@ -69,9 +69,12 @@ const KENT_CHAPTERS = [
 
 // ─── Step 1: Claude → rubric queries ─────────────────────────────────────────
 
+const DEFAULT_MODEL = "claude-haiku-4-5-20251001";
+
 async function extractRubricQueries(
   symptoms: string,
-  client: Anthropic
+  client: Anthropic,
+  model: string
 ): Promise<RubricQuery[]> {
   const KENT_PATH_EXAMPLES = [
     "MIND > FEAR", "MIND > ANXIETY", "MIND > RESTLESSNESS, nervousness",
@@ -86,7 +89,7 @@ async function extractRubricQueries(
   ].join(" | ");
 
   const msg = await client.messages.create({
-    model: "claude-haiku-4-5-20251001",
+    model,
     max_tokens: 1024,
     tools: [
       {
@@ -264,7 +267,8 @@ async function explainMatches(
   symptoms: string,
   topRemedies: ScoredRemedy[],
   sourceNames: string[],
-  client: Anthropic
+  client: Anthropic,
+  model: string
 ): Promise<RemedyMatch[]> {
   const remedySummaries = topRemedies.map((r) => {
     const rubricList = r.rubricEvidence
@@ -283,7 +287,7 @@ async function explainMatches(
   }).join("\n---\n");
 
   const msg = await client.messages.create({
-    model: "claude-haiku-4-5-20251001",
+    model,
     max_tokens: 4096,
     tools: [
       {
@@ -365,13 +369,14 @@ export async function repertorize(
   options: {
     prisma: PrismaClient;
     client: Anthropic;
+    model?: string;
     activeSources: Array<{ id: string; slug: string; name: string }>;
     excludedSymptoms?: string[];
     maxRemedies?: number;
     onProgress?: (message: string) => void;
   }
 ): Promise<RemedyMatch[]> {
-  const { prisma, client, activeSources, maxRemedies = 8, onProgress } = options;
+  const { prisma, client, model = DEFAULT_MODEL, activeSources, maxRemedies = 8, onProgress } = options;
   const progress = (msg: string) => onProgress?.(msg);
 
   const kentSource =
@@ -383,7 +388,7 @@ export async function repertorize(
 
   // Step 1
   progress("Analyzing your symptoms...");
-  const queries = await extractRubricQueries(symptoms, client);
+  const queries = await extractRubricQueries(symptoms, client, model);
   console.log(`[repertorize] ${queries.length} queries`);
   queries.forEach((q) => console.log(`  [${q.chapter}] ${q.keywords.join(" > ")} — ${q.symptomDescription}`));
   if (queries.length === 0) return [];
@@ -445,7 +450,7 @@ export async function repertorize(
   }, 2000);
 
   try {
-    return await explainMatches(symptoms, top, sourceNames, client);
+    return await explainMatches(symptoms, top, sourceNames, client, model);
   } finally {
     clearInterval(progressInterval);
   }

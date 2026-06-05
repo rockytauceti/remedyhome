@@ -17,7 +17,12 @@ import { prisma } from "@/lib/prisma";
 import { getOrCreateDbUser } from "@/lib/user";
 import { repertorize } from "@/lib/repertorize";
 
-const client = new Anthropic();
+const primaryClient = new Anthropic();
+const fallbackClient = process.env.OPENROUTER_API_KEY
+  ? new Anthropic({ apiKey: process.env.OPENROUTER_API_KEY, baseURL: "https://openrouter.ai/api" })
+  : null;
+const FALLBACK_MODEL = "anthropic/claude-haiku-4.5";
+
 const DEFAULT_SOURCE_SLUGS = ["kent", "boericke", "boericke-new", "clarke"];
 
 export async function POST(req: NextRequest) {
@@ -67,13 +72,28 @@ export async function POST(req: NextRequest) {
         controller.enqueue(encoder.encode(`data: ${JSON.stringify(data)}\n\n`));
 
       try {
-        const matches = await repertorize(symptoms, {
-          prisma,
-          client,
-          activeSources,
-          excludedSymptoms,
-          onProgress: (message) => send({ type: "progress", message }),
-        });
+        let matches;
+        try {
+          matches = await repertorize(symptoms, {
+            prisma,
+            client: primaryClient,
+            activeSources,
+            excludedSymptoms,
+            onProgress: (message) => send({ type: "progress", message }),
+          });
+        } catch (primaryErr) {
+          if (!fallbackClient) throw primaryErr;
+          console.warn("[/api/repertorize] Primary AI failed, retrying with fallback:", primaryErr);
+          send({ type: "progress", message: "Retrying with backup AI provider..." });
+          matches = await repertorize(symptoms, {
+            prisma,
+            client: fallbackClient,
+            model: FALLBACK_MODEL,
+            activeSources,
+            excludedSymptoms,
+            onProgress: (message) => send({ type: "progress", message }),
+          });
+        }
 
         // Attach community stats to each match (if available, min 5 cases)
         // Wrapped in try/catch — table may not exist yet if migration hasn't run

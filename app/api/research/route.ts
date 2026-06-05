@@ -4,7 +4,12 @@ import { auth } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prisma";
 import { getOrCreateDbUser } from "@/lib/user";
 
-const client = new Anthropic();
+const primaryClient = new Anthropic();
+const fallbackClient = process.env.OPENROUTER_API_KEY
+  ? new Anthropic({ apiKey: process.env.OPENROUTER_API_KEY, baseURL: "https://openrouter.ai/api" })
+  : null;
+const PRIMARY_MODEL = "claude-haiku-4-5-20251001";
+const FALLBACK_MODEL = "anthropic/claude-haiku-4.5";
 
 const DEFAULT_SOURCE_SLUGS = ["kent", "boericke", "boericke-new", "clarke"];
 
@@ -48,8 +53,8 @@ export async function POST(req: NextRequest) {
     .map((r) => `- ${r.name} (${r.abbreviation})${r.commonName ? ` / ${r.commonName}` : ""}: ${r.description}`)
     .join("\n");
 
-  const message = await client.messages.create({
-    model: "claude-haiku-4-5-20251001",
+  const callParams = {
+    model: PRIMARY_MODEL,
     max_tokens: 2048,
     tools: [
       {
@@ -84,10 +89,10 @@ export async function POST(req: NextRequest) {
         },
       },
     ],
-    tool_choice: { type: "auto" },
+    tool_choice: { type: "auto" as const },
     messages: [
       {
-        role: "user",
+        role: "user" as const,
         content: `You are an expert classical homeopath. A patient presents with the following symptoms:
 
 "${symptoms}"${excludedClause}
@@ -102,7 +107,16 @@ Available remedies:
 ${remedyList}`,
       },
     ],
-  });
+  };
+
+  let message;
+  try {
+    message = await primaryClient.messages.create(callParams);
+  } catch (primaryErr) {
+    if (!fallbackClient) throw primaryErr;
+    console.warn("[/api/research] Primary AI failed, retrying with fallback:", primaryErr);
+    message = await fallbackClient.messages.create({ ...callParams, model: FALLBACK_MODEL });
+  }
 
   const toolUse = message.content.find((b) => b.type === "tool_use");
   if (!toolUse || toolUse.type !== "tool_use") {
