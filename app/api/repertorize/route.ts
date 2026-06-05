@@ -17,10 +17,7 @@ import { prisma } from "@/lib/prisma";
 import { getOrCreateDbUser } from "@/lib/user";
 import { repertorize } from "@/lib/repertorize";
 
-const client = new Anthropic({
-  apiKey: process.env.OPENROUTER_API_KEY,
-  baseURL: "https://openrouter.ai/api/v1",
-});
+const client = new Anthropic();
 const DEFAULT_SOURCE_SLUGS = ["kent", "boericke", "boericke-new", "clarke"];
 
 export async function POST(req: NextRequest) {

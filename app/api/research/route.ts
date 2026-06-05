@@ -4,10 +4,7 @@ import { auth } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prisma";
 import { getOrCreateDbUser } from "@/lib/user";
 
-const client = new Anthropic({
-  apiKey: process.env.OPENROUTER_API_KEY,
-  baseURL: "https://openrouter.ai/api/v1",
-});
+const client = new Anthropic();
 
 const DEFAULT_SOURCE_SLUGS = ["kent", "boericke", "boericke-new", "clarke"];
 
@@ -52,7 +49,7 @@ export async function POST(req: NextRequest) {
     .join("\n");
 
   const message = await client.messages.create({
-    model: "anthropic/claude-haiku-4.5",
+    model: "claude-haiku-4-5-20251001",
     max_tokens: 2048,
     tools: [
       {
