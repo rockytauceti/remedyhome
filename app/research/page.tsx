@@ -246,6 +246,18 @@ export default function ResearchPage() {
           <textarea
             value={symptoms}
             onChange={(e) => setSymptoms(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                if (symptoms.trim() && !loading) {
+                  setLoading(true);
+                  setDeselectedSymptoms(new Set());
+                  setCommittedExclusions(new Set());
+                  setMatches([]);
+                  runSearch(symptoms, [], false);
+                }
+              }
+            }}
             rows={5}
             placeholder="e.g. High fever that came on suddenly this afternoon. Skin is hot, dry and flushed. Very thirsty. Restless and irritable. Worse around 3pm. No sweat."
             className="w-full border border-stone-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 resize-none"
