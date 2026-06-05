@@ -626,16 +626,20 @@ function RubricPill({ path, grade }: { path: string; grade: number }) {
 }
 
 function BuyLinks({ remedyName }: { remedyName: string }) {
-  const query = encodeURIComponent(`${remedyName} homeopathic`);
+  // Use "Boiron <name>" for better product match specificity
+  const specificQuery = encodeURIComponent(`Boiron ${remedyName}`);
+  const genericQuery = encodeURIComponent(`${remedyName} homeopathic pellets`);
   const iherbCode = process.env.NEXT_PUBLIC_IHERB_CODE;
   const amazonTag = process.env.NEXT_PUBLIC_AMAZON_TAG;
 
+  // iHerb uses `kw` param, filtered to homeopathic category (dept 1743)
   const iherbUrl = iherbCode
-    ? `https://www.iherb.com/search?query=${query}&rcode=${iherbCode}`
-    : `https://www.iherb.com/search?query=${query}`;
+    ? `https://www.iherb.com/search?kw=${specificQuery}&depts=1743&rcode=${iherbCode}`
+    : `https://www.iherb.com/search?kw=${specificQuery}&depts=1743`;
+  // Amazon: narrow to Health & Beauty, sort by relevance
   const amazonUrl = amazonTag
-    ? `https://www.amazon.com/s?k=${query}&tag=${amazonTag}`
-    : `https://www.amazon.com/s?k=${query}`;
+    ? `https://www.amazon.com/s?k=${genericQuery}&i=hpc&tag=${amazonTag}`
+    : `https://www.amazon.com/s?k=${genericQuery}&i=hpc`;
 
   return (
     <div className="mt-3 pt-2.5 border-t border-stone-100 flex items-center gap-1.5 flex-wrap">
