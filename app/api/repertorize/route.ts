@@ -79,22 +79,28 @@ export async function POST(req: NextRequest) {
         });
 
         // Attach community stats to each match (if available, min 5 cases)
-        const abbreviations = matches.map((m) => m.abbreviation);
-        const remediesWithStats = await prisma.remedy.findMany({
-          where: { abbreviation: { in: abbreviations } },
-          include: { communityStat: true },
-        });
-        const statsByAbbrev = Object.fromEntries(
-          remediesWithStats
-            .filter((r) => r.communityStat && r.communityStat.totalCases >= 5)
-            .map((r) => [r.abbreviation, r.communityStat!])
-        );
-        const matchesWithCommunity = matches.map((m) => {
-          const stat = statsByAbbrev[m.abbreviation];
-          if (!stat) return m;
-          const effectiveRate = Math.round(((stat.workedCases + stat.partialCases) / stat.totalCases) * 100);
-          return { ...m, communityStats: { totalCases: stat.totalCases, effectiveRate } };
-        });
+        // Wrapped in try/catch — table may not exist yet if migration hasn't run
+        let matchesWithCommunity = matches;
+        try {
+          const abbreviations = matches.map((m) => m.abbreviation);
+          const remediesWithStats = await prisma.remedy.findMany({
+            where: { abbreviation: { in: abbreviations } },
+            include: { communityStat: true },
+          });
+          const statsByAbbrev = Object.fromEntries(
+            remediesWithStats
+              .filter((r) => r.communityStat && r.communityStat.totalCases >= 5)
+              .map((r) => [r.abbreviation, r.communityStat!])
+          );
+          matchesWithCommunity = matches.map((m) => {
+            const stat = statsByAbbrev[m.abbreviation];
+            if (!stat) return m;
+            const effectiveRate = Math.round(((stat.workedCases + stat.partialCases) / stat.totalCases) * 100);
+            return { ...m, communityStats: { totalCases: stat.totalCases, effectiveRate } };
+          });
+        } catch {
+          // Community stats unavailable — proceed without them
+        }
 
         send({ type: "result", matches: matchesWithCommunity, activeSources: activeSourceInfo });
       } catch (err) {
