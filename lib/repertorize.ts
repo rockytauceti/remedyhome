@@ -86,7 +86,7 @@ async function extractRubricQueries(
   ].join(" | ");
 
   const msg = await client.messages.create({
-    model: "claude-haiku-4-5-20251001",
+    model: "anthropic/claude-haiku-4-5-20251001",
     max_tokens: 1024,
     tools: [
       {
@@ -283,7 +283,7 @@ async function explainMatches(
   }).join("\n---\n");
 
   const msg = await client.messages.create({
-    model: "claude-haiku-4-5-20251001",
+    model: "anthropic/claude-haiku-4-5-20251001",
     max_tokens: 4096,
     tools: [
       {
