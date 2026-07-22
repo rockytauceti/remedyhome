@@ -45,3 +45,4 @@ next-env.d.ts
 # Kent extraction — raw HTML files and generated seed data are large; not committed
 /scripts/kent/raw/
 /prisma/seeds/data/
+.env*.local
